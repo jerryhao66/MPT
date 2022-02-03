@@ -24,7 +24,6 @@ from utility.nce_loss import nt_xent
 import scipy.sparse as sp
 import logging
 import tqdm
-from scipy.stats import pearsonr
 from trainer import *
 from utility import metrics
 import heapq
@@ -670,17 +669,7 @@ def Cosine_similarity(support_encode, query_encode):
     return similarity
 
 
-def Pearson_correlation(support_encode, query_encode):
-    batch_pearson = 0.0
 
-    batch_row = support_encode.shape[0]
-    for row in range(batch_row):
-        support_encode_row = support_encode[row]
-        query_encode_row = query_encode[row]
-        pccs_row = pearsonr(support_encode_row, query_encode_row)[0]
-        # pccs_row = 0.5 * pccs_row + 0.5
-        batch_pearson += pccs_row
-    return batch_pearson / batch_row
 
 
 def contrastive_generate_training_file(epoch, Config):
