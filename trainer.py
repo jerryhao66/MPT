@@ -6,21 +6,10 @@ from utility.Config import Model_Config
 import gendata as data
 from time import time
 import tqdm
-from scipy.stats import pearsonr
 
 setting = Model_Config()
 
-def Pearson_correlation(support_encode, query_encode):
-    batch_pearson = 0.0
 
-    batch_row = support_encode.shape[0]
-    for row in range(batch_row):
-        support_encode_row = support_encode[row]
-        query_encode_row = query_encode[row]
-        pccs_row = pearsonr(support_encode_row, query_encode_row)[0]
-        # pccs_row = 0.5 * pccs_row + 0.5
-        batch_pearson += pccs_row
-    return batch_pearson / batch_row
 
 def training_user_task(model, sess):
     print('training meta user task...')
@@ -46,11 +35,11 @@ def training_user_task(model, sess):
             train_loss = training_loss_user_task(batch_index, model, sess, train_batches, True)
             loss_time = time() - loss_begin
             eval_begin = time()
-            cosine, pearson = evaluate_user_task(valid_batch_index, model, sess, valid_batches, True)
+            cosine = evaluate_user_task(valid_batch_index, model, sess, valid_batches, True)
             eval_time = time() - eval_begin
             print(
-                'epoch %d, train time is %.4f, loss time is %.4f, eval_time is %.4f, train_loss is %.4f, test cosine value is %.4f, test pearson value is %.4f' % (
-                    epoch_count, train_time, loss_time, eval_time, train_loss, cosine, pearson))
+                'epoch %d, train time is %.4f, loss time is %.4f, eval_time is %.4f, train_loss is %.4f, test cosine value is %.4f' % (
+                    epoch_count, train_time, loss_time, eval_time, train_loss, cosine))
 
             if cosine < best_loss:
                 best_loss = cosine
@@ -67,7 +56,7 @@ def evaluate_user_task(valid_batch_index, model, sess, valid_data, is_training):
     '''
     the train_batch_size not necessarily equal to the test_batch_size
     '''
-    evaluate_loss, evaluate_pearson = 0.0, 0.0
+    evaluate_loss = 0.0
     for index in tqdm.tqdm(valid_batch_index):
         user_id, support_item, target_user = data.batch_gen_user_task(valid_data, index, setting.batch_size)
 
@@ -77,10 +66,9 @@ def evaluate_user_task(valid_batch_index, model, sess, valid_data, is_training):
 
 
         batch_predict_ebd, batch_target_ebd = sess.run([model.final_support_encode_user_task, model.target_user], feed_dict)
-        batch_pearson = Pearson_correlation(batch_predict_ebd, batch_target_ebd)
-        evaluate_pearson += batch_pearson
+        
 
-    return evaluate_loss / len(valid_batch_index), evaluate_pearson / len(valid_batch_index)
+    return evaluate_loss / len(valid_batch_index)
 
 
 def training_batch_user_task(batch_index, model, sess, train_data, is_training):
@@ -128,7 +116,7 @@ def training_batch_user_reconstruct_task(model, sess, config):
         '''
         evaluate
         '''
-        test_loss, test_pearson = 0.0, 0.0
+        test_loss = 0.0
         for index in test_batch_index:
             test_batch_user = test_u[index]
             # print(np.array(test_batch_user).shape)
@@ -137,22 +125,19 @@ def training_batch_user_reconstruct_task(model, sess, config):
             batch_predict_ebd, batch_target_ebd = sess.run([model.batch_predict_u_ebd, model.batch_target_u_ebd],
                                                            feed_dict)
 
-            batch_pearson = Pearson_correlation(batch_predict_ebd, batch_target_ebd)
-            test_pearson += batch_pearson
 
         test_loss = test_loss / test_num_batch
-        test_pearson = test_pearson / test_num_batch
 
         if test_loss < best_loss:
             best_loss = test_loss
             saver.save(sess, config.checkpoint_path_downstream, global_step=epoch)
 
-        print('[Epoch %d], train_loss is %.4f, test loss is %.4f, test pearson is %.4f' % (
-            epoch, train_loss, test_loss, test_pearson))
+        print('[Epoch %d], train_loss is %.4f, test loss is %.4f' % (
+            epoch, train_loss, test_loss))
 
 
 def training_batch_item_reconstruct_task(model, sess, config):
-    best_loss, best_pearson = 0.0, 0.0
+    best_loss = 0.0
     saver = tf.train.Saver(max_to_keep=3)
     train_i, test_i, num_batch, test_num_batch = load_item_batch(config)
     batch_index = range(num_batch)
@@ -174,7 +159,7 @@ def training_batch_item_reconstruct_task(model, sess, config):
         '''
         evaluate
         '''
-        test_loss, test_pearson = 0.0, 0.0
+        test_loss = 0.0
         for index in test_batch_index:
             test_batch_item = test_i[index]
             # print(np.array(test_batch_item).shape)
@@ -183,18 +168,16 @@ def training_batch_item_reconstruct_task(model, sess, config):
 
             batch_predict_ebd, batch_target_ebd = sess.run([model.batch_predict_i_ebd, model.batch_target_i_ebd],
                                                            feed_dict)
-            batch_pearson = Pearson_correlation(batch_predict_ebd, batch_target_ebd)
-            test_pearson += batch_pearson
+ 
 
         test_loss = test_loss / test_num_batch
-        test_pearson = test_pearson / test_num_batch
 
         if test_loss < best_loss:
             best_loss = test_loss
             saver.save(sess, config.checkpoint_path_downstream, global_step=epoch)
 
-        print('[Epoch %d], train_loss is %.4f, test loss is %.4f, test pearson is %.4f' % (
-            epoch, train_loss, test_loss, test_pearson))
+        print('[Epoch %d], train_loss is %.4f, test loss is %.4f' % (
+            epoch, train_loss, test_loss))
 
 def load_user_batch(Config):
     train_u, test_u = [], []
@@ -316,11 +299,11 @@ def training_item_task(model, sess):
             train_loss = training_loss_item_task(batch_index, model, sess, train_batches, True)
             loss_time = time() - loss_begin
             eval_begin = time()
-            cosine, pearson = evaluate_item_task(valid_batch_index, model, sess, valid_batches, True)
+            cosine = evaluate_item_task(valid_batch_index, model, sess, valid_batches, True)
             eval_time = time() - eval_begin
             print(
-                'epoch %d, train time is %.4f, loss time is %.4f, eval_time is %.4f, train_loss is %.4f, test cosine value is %.4f, test pearson value is %.4f' % (
-                    epoch_count, train_time, loss_time, eval_time, train_loss, cosine, pearson))
+                'epoch %d, train time is %.4f, loss time is %.4f, eval_time is %.4f, train_loss is %.4f, test cosine value is %.4f' % (
+                    epoch_count, train_time, loss_time, eval_time, train_loss, cosine))
             if cosine < best_loss:
                 best_loss = cosine
                 saver.save(sess, setting.checkpoint_path_item_task, global_step=epoch_count)
@@ -336,7 +319,7 @@ def evaluate_item_task(valid_batch_index, model, sess, valid_data, is_training):
     '''
     the train_batch_size not necessarily equal to the test_batch_size
     '''
-    evaluate_loss, evaluate_pearson = 0.0, 0.0
+    evaluate_loss = 0.0
     for index in tqdm.tqdm(valid_batch_index):
         item_id, support_user, target_item = data.batch_gen_item_task(valid_data, index, setting.batch_size)
 
@@ -345,10 +328,8 @@ def evaluate_item_task(valid_batch_index, model, sess, valid_data, is_training):
         evaluate_loss += sess.run(model.loss_item_task, feed_dict)
 
         batch_predict_ebd, batch_target_ebd = sess.run([model.final_support_encode_item_task, model.target_item], feed_dict)
-        batch_pearson = Pearson_correlation(batch_predict_ebd, batch_target_ebd)
-        evaluate_pearson += batch_pearson
 
-    return evaluate_loss / len(valid_batch_index), evaluate_pearson / len(valid_batch_index)
+    return evaluate_loss / len(valid_batch_index)
 
 
 def generate_ebd_batch_user_task(batch_index, model, sess, train_data, is_training):
