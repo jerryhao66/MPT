@@ -9,4 +9,4 @@ tensorflow == 1.14.0 numpy == 1.16.0 tqdm == 4.50.2 scipy == 1.5.2 torch == 1.3.
 
 Runing instructions: We test our model on three datasets, namely MovieLens-1M, MOOCs and Gowalla.
 
-run 'python Recommendation.py' to test our codes.
+run 'python Recommendation.py' to test our code.
