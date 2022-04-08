@@ -2,26 +2,41 @@ import numpy as np
 import tensorflow as tf
 class Model_Config(object): 
     def __init__(self):
+        self.attention_probs_dropout_prob = 0.1
+        self.hidden_act = gelu
+        self.hidden_dropout_prob = 0.1
+        self.hidden_size = 32  # original bert hidden_size = 768
+        self.initializer_range = 0.02
+        self.intermediate_size = 64  # 4096
+        self.max_position_embeddings = 512
+        self.num_attention_heads = 8
+        self.num_hidden_layers = 24
+        self.type_vocab_size = 2
+        self.vocab_size = 10001
+        self.seq_length = 11  # lenth of meta path plus 3 ([cls] [mask] [pad])
+
+        self.lr = 0.003
+
 
         self.input = './Data/movielens_dataset/bert_mask/train_adjlist.txt'
-        # self.vocab_file = './Data/movielens_dataset/bert_mask/vocab_recommendation.txt'
-        # self.do_lower_case = True
-        # self.random_seed = 12345
-        # self.output_files = ['output1.txt']
-        # self.do_whole_word_mask = False
-        # self.max_seq_length = 11
-        # self.max_seq_length_test = 11
-        # self.max_predictions_per_seq = 11
-        # self.dupe_factor = 5
-        # self.masked_lm_prob = 0.15
-        # self.short_seq_prob = 0.1
+        self.vocab_file = './Data/movielens_dataset/bert_mask/vocab_recommendation.txt'
+        self.do_lower_case = True
+        self.random_seed = 12345
+        self.output_files = ['output1.txt']
+        self.do_whole_word_mask = False
+        self.max_seq_length = 11
+        self.max_seq_length_test = 11
+        self.max_predictions_per_seq = 11
+        self.dupe_factor = 5
+        self.masked_lm_prob = 0.15
+        self.short_seq_prob = 0.1
 
 
 
         self.input_filter = 'train_adjlist_filter_cold_start.txt'
         self.few_shot_number = 3
         self.number_walks = 1
-        self.walk_length = 8
+        self.walk_length = 4
         self.walk_length_meta_path = 8
         self.representation_size = 32
         self.graph_format = 'adjlist'
@@ -30,31 +45,15 @@ class Model_Config(object):
         self.num_users = 6041
         self.num_items = 3953
         self.verbose = 3 # write train file per 'verbose' epoch
+        # self.dupe_factor = 10
+        # self.Ks = 20
 
-        # self.attention_probs_dropout_prob = 0.1
-        # self.hidden_act = gelu
-        # self.hidden_dropout_prob = 0.1
-        # self.hidden_size = 32  # original bert hidden_size = 768
-        self.initializer_range = 0.02
-        # self.intermediate_size = 64  # 4096
-        # self.max_position_embeddings = 512
-        # self.num_attention_heads = 8
-        # self.num_hidden_layers = 24
-        # self.type_vocab_size = 2
-        self.vocab_size = self.num_users + self.num_items + 2 + 4  # 10000
-        # self.seq_length = 11  # lenth of meta path plus 3 ([cls] [mask] [pad])
+        self.input_meta_path_files = ['meta_path_train.txt']
 
-        self.lr = 0.003
-        self.user_item_path = './Data/movielens_dataset/bert_mask/user_item_path_all.csv'
-        self.user_item_delete_path = './Data/movielens_dataset/bert_mask/user_item_path_delete_all.csv'
-        self.user_item_replace_path = './Data/movielens_dataset/bert_mask/user_item_path_replace_all.csv'
-        self.user_item_train_path = './Data/movielens_dataset/bert_mask/user_item_train_path.csv'
-        self.user_item_valid_path = './Data/movielens_dataset/bert_mask/user_item_valid_path.csv'
 
 
         # general Conv_parameters
         self.batch_size = 512
-        self.batch_size_tranformer = 500
         self.batch_size_reconstruct = 64
         self.epochs = 20
         self.learning_rate = 0.003
@@ -85,7 +84,7 @@ class Model_Config(object):
         self.kshot_second_num = 3
         self.kshot_third_num = 3
 
-        self.temperature = 0.05
+
 
         self.oracle_user_ebd_path = './Data/movielens_dataset/target_32_pretrain_feature/user_feature.npy'
         self.oracle_item_ebd_path = './Data/movielens_dataset/target_32_pretrain_feature/item_feature.npy'
@@ -119,9 +118,6 @@ class Model_Config(object):
         self.layer_size = '[160, 160, 160, 160]'
         self.layer_size1 = '[32, 32, 32, 32]'
 
-        self.replace_ratio = 0.2
-        self.delete_ratio = 0.2
-
         self.regs = '[1e-5,1e-5,1e-2]'
         self.lr = 0.003
         self.model_type = 'Lightgcn'
@@ -135,30 +131,26 @@ class Model_Config(object):
         self.test_flag = 'part'
         self.report = 0
         self.conv_name = 'lightgcn'
-        self.pretrain_user_ebd_path = './Data/movielens_dataset/oracle_embedding/user_feature.npy'
-        self.pretrain_item_ebd_path = './Data/movielens_dataset/oracle_embedding/item_feature.npy'
+        self.pretrain_user_ebd_path = './Data/movielens_dataset/oracle_embedding/LightGCN-GT/user_feature.npy'
+        self.pretrain_item_ebd_path = './Data/movielens_dataset/oracle_embedding/LightGCN-GT/item_feature.npy'
 
         self.initial_user_ebd_path = './Data/movielens_dataset/initial_embedding/init_user_ebd.npy'
         self.initial_item_ebd_path = './Data/movielens_dataset/initial_embedding/init_item_ebd.npy'
 
         self.meta_user_ebd_path = './Data/movielens_dataset/meta-embedding/meta_user_ebd.npy'
         self.meta_item_ebd_path = './Data/movielens_dataset/meta-embedding/meta_item_ebd.npy'
-        self.bert_user_ebd_path = './Data/movielens_dataset/bert-embedding/bert_c_user_ebd.npy'
-        self.bert_item_ebd_path = './Data/movielens_dataset/bert-embedding/bert_c_item_ebd.npy'
-        self.bert_c_user_ebd_path = './Data/movielens_dataset/bert-embedding/bert_user_ebd.npy'
-        self.bert_c_item_ebd_path = './Data/movielens_dataset/bert-embedding/bert_item_ebd.npy'
+
+        self.current_user_ebd_path = './Data/movielens_dataset/current-embedding/current_user_ebd.npy'
+        self.current_item_ebd_path =   './Data/movielens_dataset/current-embedding/current_item_ebd.npy'
+
 
         self.few_shot_number = 3
         self.pretext_task_name = 'reconstruction'
-        self.contrastive_delete = 'contrastive_delete'
-        self.contrastive_replace = 'contrastive_replace'
         self.user_reconstruct_epoch = 8
         self.item_reconstruct_epoch = 8
         self.checkpoint_path_item_task = './Checkpoint/item_task/'
         self.checkpoint_path_user_task = './Checkpoint/user_task/'
         self.checkpoint_path_downstream = './Checkpoint/downstream/'
-        self.checkpoint_path_bert_task = './Checkpoint/bert_task/'
-        self.checkpoint_path_bert_contrastive_task = './Checkpoint/bert_contrastive/'
 
         self.pretrain_data = self.load_pretrain_data()
 
@@ -167,9 +159,9 @@ class Model_Config(object):
         pretrain_data = {}
         pretrain_data['user_embed'] = np.load(self.pretrain_user_ebd_path)
         pretrain_data['item_embed'] = np.load(self.pretrain_item_ebd_path)
-        concat_embed = np.concatenate((pretrain_data['user_embed'], pretrain_data['item_embed']), 0)
-        initial_ebd = np.zeros((2, 32))
-        pretrain_data['bert_embed'] = np.concatenate((concat_embed, initial_ebd), axis=0)
+        pretrain_data['concat_embed'] = np.concatenate((pretrain_data['user_embed'], pretrain_data['item_embed']), 0)
+        # print(pretrain_data['concat_embed'].shape)
+
         return pretrain_data
 
 
